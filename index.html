@@ -1,0 +1,1246 @@
+<!DOCTYPE html><html lang="ru"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КАИ Подработки - Доска объявлений для студентов</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateyo/2.3.2/jquery.rateyo.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rateyo/2.3.2/jquery.rateyo.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2c3e50',
+                        secondary: '#3498db',
+                        accent: '#e74c3c',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .required-field::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        .star-rating {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            font-size: 1.5em;
+            justify-content: space-around;
+            padding: 0;
+            text-align: center;
+            width: 5em;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            color: #ccc;
+            cursor: pointer;
+        }
+        .star-rating :checked ~ label {
+            color: #f90;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #fc0;
+        }
+        .nav-item.active {
+            border-bottom: 3px solid #3498db;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- Header with Auth -->
+    <header class="bg-primary text-white shadow-md">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-briefcase text-2xl text-secondary"></i>
+                    <h1 class="text-xl md:text-2xl font-bold">КАИ Подработки</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="addBtn" class="bg-secondary hover:bg-blue-600 text-white px-4 py-2 rounded-md transition flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Добавить
+                    </button>
+                    <div id="authButtons" class="flex space-x-2">
+                        <button id="loginBtn" class="bg-white hover:bg-gray-100 text-primary px-4 py-2 rounded-md transition">
+                            Войти
+                        </button>
+                        <button id="registerBtn" class="bg-accent hover:bg-red-500 text-white px-4 py-2 rounded-md transition">
+                            Регистрация
+                        </button>
+                    </div>
+                    <div id="userProfile" class="hidden relative group">
+                        <button class="flex items-center space-x-2">
+                            <img src="https://imgholder.ru/40x40/2c3e50/ffffff&amp;text=USER&amp;font=kelson" alt="Аватар" class="w-8 h-8 rounded-full">
+                            <span id="usernameDisplay" class="hidden md:inline">Иван К.</span>
+                        </button>
+                        <div class="absolute right-0 top-full w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
+                            <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100" id="profileLink">Профиль</a>
+                            <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100" id="ordersLink">Мои заказы</a>
+                            <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100" id="reviewsLink">Отзывы</a>
+                            <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100" id="logoutBtn">Выйти</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <!-- User Profile Section (Hidden by default) -->
+        <section id="profileSection" class="hidden mb-10 bg-white rounded-lg shadow-md p-6">
+            <div class="flex flex-col md:flex-row items-start space-y-6 md:space-y-0 md:space-x-6">
+                <div class="flex-shrink-0">
+                    <img src="https://imgholder.ru/150x150/2c3e50/ffffff&amp;text=USER&amp;font=kelson" alt="Аватар" class="w-32 h-32 rounded-full border-4 border-secondary">
+                    <button class="mt-2 text-sm text-secondary hover:underline w-full">Изменить фото</button>
+                </div>
+                <div class="flex-grow">
+                    <h2 class="text-2xl font-bold text-primary mb-4">Иван К.</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <h3 class="font-semibold text-primary mb-2">Контактная информация</h3>
+                            <p class="text-gray-700">
+                                <i class="fas fa-envelope mr-2"></i> ivan.k@students.kai.ru
+                            </p>
+                            <p class="text-gray-700">
+                                <i class="fab fa-telegram mr-2"></i> @ivan_kaistudent
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-primary mb-2">Статистика</h3>
+                            <div class="flex items-center mb-1">
+                                <span class="w-24 text-gray-700">Рейтинг:</span>
+                                <div class="flex items-center">
+                                    <div class="text-yellow-400 mr-1">★★★★☆</div>
+                                    <span class="text-sm text-gray-500">4.2</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center mb-1">
+                                <span class="w-24 text-gray-700">Выполнено:</span>
+                                <span class="font-medium">12 заказов</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-24 text-gray-700">На сайте:</span>
+                                <span class="font-medium">3 месяца</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-md">
+                        <h3 class="font-semibold text-primary mb-1">О себе</h3>
+                        <p class="text-gray-700">Студент 3 курса КАИ, факультет информационных технологий. Разработка сайтов, настройка ПК, помощь с программированием.</p>
+                        <button class="mt-2 text-sm text-secondary hover:underline">Редактировать профиль</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- My Orders Section (Hidden by default) -->
+        <section id="ordersSection" class="hidden mb-10">
+            <h2 class="text-xl font-bold text-primary mb-4">Мои заказы</h2>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="flex border-b">
+                    <button class="nav-item active px-6 py-3 font-medium" data-tab="active-orders">Активные</button>
+                    <button class="nav-item px-6 py-3 font-medium" data-tab="completed-orders">Завершённые</button>
+                    <button class="nav-item px-6 py-3 font-medium" data-tab="my-services">Мои услуги</button>
+                </div>
+                
+                <!-- Active Orders -->
+                <div id="active-orders" class="tab-content p-4">
+                    <div class="bg-white rounded-lg border border-gray-200 mb-4 overflow-hidden">
+                        <div class="p-4 border-b">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg">Заказ #135 - Помощь с курсовой по Java</h3>
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm">В работе</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex flex-col md:flex-row md:justify-between">
+                            <div class="mb-4 md:mb-0">
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Исполнитель:</span> Алексей П. ★★★★☆</p>
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Срок:</span> до 15.03.2025</p>
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Цена:</span> 5 000 ₽</p>
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Контакт:</span> <a href="#" class="text-secondary hover:underline">@alex_javahelp</a></p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+                                    <i class="fas fa-check mr-1"></i> Подтвердить
+                                </button>
+                                <button class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">
+                                    <i class="fas fa-times mr-1"></i> Отменить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg border border-gray-200 mb-4 overflow-hidden">
+                        <div class="p-4 border-b">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg">Заказ #148 - Дизайн логотипа</h3>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Поиск исполнителя</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex flex-col md:flex-row md:justify-between">
+                            <div class="mb-4 md:mb-0">
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Категория:</span> Дизайн</p>
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Срок:</span> до 20.03.2025</p>
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Цена:</span> 3 000 ₽</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition">
+                                    <i class="fas fa-eye mr-1"></i> Просмотры: 7
+                                </button>
+                                <button class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">
+                                    <i class="fas fa-times mr-1"></i> Отменить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center py-8 text-gray-500 hidden" id="no-active-orders">
+                        <i class="fas fa-clipboard-list text-4xl mb-3"></i>
+                        <p class="text-lg">У вас нет активных заказов</p>
+                    </div>
+                </div>
+                
+                <!-- Completed Orders -->
+                <div id="completed-orders" class="tab-content p-4 hidden">
+                    <div class="bg-white rounded-lg border border-gray-200 mb-4 overflow-hidden">
+                        <div class="p-4 border-b">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg">Заказ #124 - Настройка компьютера</h3>
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Завершён</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex flex-col md:flex-row md:justify-between">
+                            <div class="mb-4 md:mb-0">
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Исполнитель:</span> Михаил С. ★★★★★</p>
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Дата завершения:</span> 05.02.2025</p>
+                                <p class="text-gray-700 mb-2"><span class="font-medium">Цена:</span> 2 500 ₽</p>
+                                <div class="flex items-center">
+                                    <span class="font-medium mr-2">Ваш отзыв:</span>
+                                    <div class="text-yellow-400">★★★★★</div>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 transition" onclick="showReviewDetail('Отличная работа! Компьютер работает как новый, всё настроено под мои нужды. Михаил профессионал своего дела, рекомендую!')">
+                                    <i class="fas fa-comment mr-1"></i> Посмотреть отзыв
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-clipboard-check text-4xl mb-3"></i>
+                        <p class="text-lg">У вас 1 завершённый заказ</p>
+                    </div>
+                </div>
+                
+                <!-- My Services -->
+                <div id="my-services" class="tab-content p-4 hidden">
+                    <div class="bg-white rounded-lg border border-gray-200 mb-4 overflow-hidden">
+                        <div class="p-4 border-b">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-semibold text-lg">Разработка простого сайта</h3>
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Активно</span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex flex-col md:flex-row md:justify-between">
+                            <div class="mb-4 md:mb-0">
+                                <p class="text-gray-700 mb-2">Создам одностраничный сайт для вашего проекта или портфолио на HTML/CSS/JS</p>
+                                <div class="flex items-center">
+                                    <span class="font-medium mr-2">Рейтинг:</span>
+                                    <div class="text-yellow-400">★★★★☆</div>
+                                    <span class="text-gray-500 ml-1">(4.2, 5 отзывов)</span>
+                                </div>
+                                <p class="text-gray-700 mt-2"><span class="font-medium">Цена:</span> 2 000 - 5 000 ₽</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-4 py-2 bg-secondary text-white rounded hover:bg-blue-600 transition">
+                                    <i class="fas fa-edit mr-1"></i> Редактировать
+                                </button>
+                                <button class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">
+                                    <i class="fas fa-times mr-1"></i> Удалить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center py-8 text-gray-500">
+                        <button class="px-4 py-2 bg-secondary text-white rounded hover:bg-blue-600 transition flex items-center mx-auto">
+                            <i class="fas fa-plus mr-2"></i> Добавить услугу
+                        </button>
+                        <p class="mt-3 text-sm text-gray-500">Вы можете предложить до 3 услуг одновременно</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reviews Section (Hidden by default) -->
+        <section id="reviewsSection" class="hidden mb-10">
+            <h2 class="text-xl font-bold text-primary mb-4">Отзывы обо мне</h2>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                    <div class="flex items-center mb-4 md:mb-0">
+                        <div class="text-4xl font-bold mr-4">4.2</div>
+                        <div>
+                            <div class="text-yellow-400 text-xl mb-1">★★★★☆</div>
+                            <div class="text-sm text-gray-600">7 отзывов</div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-2/3">
+                        <div class="flex items-center mb-1">
+                            <span class="w-16">5★</span>
+                            <div class="flex-grow mx-2">
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <span class="w-8 text-sm text-gray-600">4</span>
+                        </div>
+                        <div class="flex items-center mb-1">
+                            <span class="w-16">4★</span>
+                            <div class="flex-grow mx-2">
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 20%"></div>
+                                </div>
+                            </div>
+                            <span class="w-8 text-sm text-gray-600">1</span>
+                        </div>
+                        <div class="flex items-center mb-1">
+                            <span class="w-16">3★</span>
+                            <div class="flex-grow mx-2">
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 10%"></div>
+                                </div>
+                            </div>
+                            <span class="w-8 text-sm text-gray-600">1</span>
+                        </div>
+                        <div class="flex items-center mb-1">
+                            <span class="w-16">2★</span>
+                            <div class="flex-grow mx-2">
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <span class="w-8 text-sm text-gray-600">0</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-16">1★</span>
+                            <div class="flex-grow mx-2">
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 10%"></div>
+                                </div>
+                            </div>
+                            <span class="w-8 text-sm text-gray-600">1</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="border-b pb-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center">
+                                <img src="https://imgholder.ru/40x40/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-8 h-8 rounded-full mr-2">
+                                <span class="font-medium">Анна П.</span>
+                            </div>
+                            <div class="text-yellow-400">★★★★★</div>
+                        </div>
+                        <p class="text-gray-700 mb-2">Иван отлично справился с настройкой моего ноутбука! Всё работает быстро и без сбоев. Профессионал!</p>
+                        <div class="text-sm text-gray-500">10 февраля 2025 · Заказ "Настройка компьютера"</div>
+                    </div>
+                    
+                    <div class="border-b pb-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center">
+                                <img src="https://imgholder.ru/40x40/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-8 h-8 rounded-full mr-2">
+                                <span class="font-medium">Дмитрий С.</span>
+                            </div>
+                            <div class="text-yellow-400">★★★☆☆</div>
+                        </div>
+                        <p class="text-gray-700 mb-2">Неплохо, но были некоторые недочёты в коде. В целом результат удовлетворительный.</p>
+                        <div class="text-sm text-gray-500">25 января 2025 · Заказ "Разработка сайта"</div>
+                    </div>
+                    
+                    <div class="pb-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center">
+                                <img src="https://imgholder.ru/40x40/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-8 h-8 rounded-full mr-2">
+                                <span class="font-medium">Ольга М.</span>
+                            </div>
+                            <div class="text-yellow-400">★★★★☆</div>
+                        </div>
+                        <p class="text-gray-700 mb-2">Рекомендую Ивана за хорошее знание предмета. Помог мне разобраться с трудной темой в программировании.</p>
+                        <div class="text-sm text-gray-500">15 января 2025 · Заказ "Помощь с программированием"</div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <button class="text-secondary hover:underline font-medium">Показать все отзывы (7)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content (Visible when not in profile/orders/reviews) -->
+        <div id="mainContent">
+            <!-- Hero Section -->
+            <section class="mb-10 bg-white rounded-lg shadow-md p-6">
+                <div class="flex flex-col md:flex-row items-center">
+                    <div class="md:w-2/3 mb-6 md:mb-0 md:pr-8">
+                        <h2 class="text-2xl md:text-3xl font-bold text-primary mb-4">Найди подработку или предложи свои услуги</h2>
+                        <p class="text-gray-700 mb-4">Только для студентов колледжа КАИ. Помощь с учебой, IT-услуги, дизайн и многое другое.</p>
+                        <div class="flex space-x-4">
+                            <button id="featuredBtn" class="bg-secondary text-white px-4 py-2 rounded-md hover:bg-blue-600 transition">
+                                Популярные услуги
+                            </button>
+                            <button id="howItWorksBtn" class="border border-primary text-primary px-4 py-2 rounded-md hover:bg-primary hover:text-white transition">
+                                Как это работает?
+                            </button>
+                        </div>
+                    </div>
+                    <div class="md:w-1/3">
+                        <img src="https://imgholder.ru/600x300/2c3e50/ffffff&amp;text=КАИ_Подработки&amp;font=kelson" alt="Студенты работают" class="rounded-lg w-full h-auto">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                    <div class="text-3xl font-bold text-primary">128</div>
+                    <div class="text-gray-600">Активных объявлений</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                    <div class="text-3xl font-bold text-primary">54</div>
+                    <div class="text-gray-600">Студентов нашли работу</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                    <div class="text-3xl font-bold text-primary">7</div>
+                    <div class="text-gray-600">Категорий услуг</div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                    <div class="relative w-full md:w-1/2">
+                        <input type="text" placeholder="Поиск по ключевым словам..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary">
+                        <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                    </div>
+                    <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                        <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary">
+                            <option value="">Все категории</option>
+                            <option value="study">Учёба</option>
+                            <option value="it">IT</option>
+                            <option value="design">Дизайн</option>
+                            <option value="video">Монтаж видео</option>
+                            <option value="other">Другое</option>
+                        </select>
+                        <select class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary">
+                            <option value="">Любая оплата</option>
+                            <option value="fixed">Фиксированная</option>
+                            <option value="negotiable">Договорная</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Listings -->
+            <section>
+                <h2 class="text-xl font-bold text-primary mb-4">Последние объявления</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Job Card 1 -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 card-hover">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">IT</span>
+                                <span class="text-sm text-gray-500">2 дня назад</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-primary mb-2">Настройка компьютера</h3>
+                            <p class="text-gray-700 mb-4">Помогу с настройкой ОС, драйверов, программного обеспечения для вашего ПК или ноутбука.</p>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <span class="font-medium text-gray-900">500 - 1000 ₽</span>
+                                    <div class="flex items-center mt-1">
+                                        <div class="text-yellow-400 text-sm mr-1">★★★★☆</div>
+                                        <span class="text-xs text-gray-500">(12)</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <a href="#" class="text-secondary hover:underline flex items-center justify-end">
+                                        <img src="https://imgholder.ru/20x20/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-5 h-5 rounded-full mr-1">
+                                        Иван К.
+                                    </a>
+                                    <button class="mt-2 bg-primary text-white text-xs px-3 py-1 rounded hover:bg-opacity-90 transition">
+                                        <i class="fas fa-shopping-cart mr-1"></i> Заказать
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Job Card 2 -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 card-hover">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Учёба</span>
+                                <span class="text-sm text-gray-500">Сегодня</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-primary mb-2">Помощь с лабораторной по физике</h3>
+                            <p class="text-gray-700 mb-4">Объясню материал, помогу с решением задач и оформлением лабораторной работы.</p>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <span class="font-medium text-gray-900">Договорная</span>
+                                    <div class="flex items-center mt-1">
+                                        <div class="text-yellow-400 text-sm mr-1">★★★★★</div>
+                                        <span class="text-xs text-gray-500">(8)</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <a href="#" class="text-secondary hover:underline flex items-center justify-end">
+                                        <img src="https://imgholder.ru/20x20/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-5 h-5 rounded-full mr-1">
+                                        Анна П.
+                                    </a>
+                                    <button class="mt-2 bg-primary text-white text-xs px-3 py-1 rounded hover:bg-opacity-90 transition">
+                                        <i class="fas fa-shopping-cart mr-1"></i> Заказать
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Job Card 3 -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 card-hover">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded">Дизайн</span>
+                                <span class="text-sm text-gray-500">3 дня назад</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-primary mb-2">Дизайн презентации</h3>
+                            <p class="text-gray-700 mb-4">Создам стильную презентацию для вашего проекта или защиты курсовой работы.</p>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <span class="font-medium text-gray-900">800 - 1500 ₽</span>
+                                    <div class="flex items-center mt-1">
+                                        <div class="text-yellow-400 text-sm mr-1">★★★☆☆</div>
+                                        <span class="text-xs text-gray-500">(5)</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <a href="#" class="text-secondary hover:underline flex items-center justify-end">
+                                        <img src="https://imgholder.ru/20x20/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-5 h-5 rounded-full mr-1">
+                                        Екатерина М.
+                                    </a>
+                                    <button class="mt-2 bg-primary text-white text-xs px-3 py-1 rounded hover:bg-opacity-90 transition">
+                                        <i class="fas fa-shopping-cart mr-1"></i> Заказать
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Job Card 4 -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 card-hover">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Монтаж видео</span>
+                                <span class="text-sm text-gray-500">Вчера</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-primary mb-2">Монтаж учебного видео</h3>
+                            <p class="text-gray-700 mb-4">Смонтирую ваше видео для проекта или YouTube канала, добавлю эффекты и музыку.</p>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <span class="font-medium text-gray-900">от 1000 ₽</span>
+                                    <div class="flex items-center mt-1">
+                                        <div class="text-yellow-400 text-sm mr-1">★★★★☆</div>
+                                        <span class="text-xs text-gray-500">(6)</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <a href="#" class="text-secondary hover:underline flex items-center justify-end">
+                                        <img src="https://imgholder.ru/20x20/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-5 h-5 rounded-full mr-1">
+                                        Дмитрий С.
+                                    </a>
+                                    <button class="mt-2 bg-primary text-white text-xs px-3 py-1 rounded hover:bg-opacity-90 transition">
+                                        <i class="fas fa-shopping-cart mr-1"></i> Заказать
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Job Card 5 -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 card-hover">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">IT</span>
+                                <span class="text-sm text-gray-500">5 дней назад</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-primary mb-2">Разработка простого сайта</h3>
+                            <p class="text-gray-700 mb-4">Создам одностраничный сайт для вашего проекта или портфолио на HTML/CSS/JS.</p>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <span class="font-medium text-gray-900">2000 - 5000 ₽</span>
+                                    <div class="flex items-center mt-1">
+                                        <div class="text-yellow-400 text-sm mr-1">★★★★★</div>
+                                        <span class="text-xs text-gray-500">(15)</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <a href="#" class="text-secondary hover:underline flex items-center justify-end">
+                                        <img src="https://imgholder.ru/20x20/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-5 h-5 rounded-full mr-1">
+                                        Алексей В.
+                                    </a>
+                                    <button class="mt-2 bg-primary text-white text-xs px-3 py-1 rounded hover:bg-opacity-90 transition">
+                                        <i class="fas fa-shopping-cart mr-1"></i> Заказать
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Job Card 6 -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 card-hover">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Другое</span>
+                                <span class="text-sm text-gray-500">Неделю назад</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-primary mb-2">Фотосъёмка на мероприятия</h3>
+                            <p class="text-gray-700 mb-4">Сфотографирую ваше мероприятие в КАИ (конференции, защиты и т.д.).</p>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <span class="font-medium text-gray-900">1500 ₽ в час</span>
+                                    <div class="flex items-center mt-1">
+                                        <div class="text-yellow-400 text-sm mr-1">★★★☆☆</div>
+                                        <span class="text-xs text-gray-500">(3)</span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <a href="#" class="text-secondary hover:underline flex items-center justify-end">
+                                        <img src="https://imgholder.ru/20x20/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-5 h-5 rounded-full mr-1">
+                                        Ольга К.
+                                    </a>
+                                    <button class="mt-2 bg-primary text-white text-xs px-3 py-1 rounded hover:bg-opacity-90 transition">
+                                        <i class="fas fa-shopping-cart mr-1"></i> Заказать
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Add Job Modal -->
+    <div id="addJobModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b p-4">
+                <h3 class="text-lg font-semibold text-primary">Добавить объявление</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="jobForm" class="p-4">
+                <div class="mb-4">
+                    <label for="jobTitle" class="block text-gray-700 font-medium mb-2 required-field">Название</label>
+                    <input type="text" id="jobTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                </div>
+                <div class="mb-4">
+                    <label for="jobCategory" class="block text-gray-700 font-medium mb-2 required-field">Категория</label>
+                    <select id="jobCategory" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                        <option value="">Выберите категорию</option>
+                        <option value="study">Учёба</option>
+                        <option value="it">IT</option>
+                        <option value="design">Дизайн</option>
+                        <option value="video">Монтаж видео</option>
+                        <option value="other">Другое</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="jobDescription" class="block text-gray-700 font-medium mb-2 required-field">Описание</label>
+                    <textarea id="jobDescription" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required=""></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="jobPriceType" class="block text-gray-700 font-medium mb-2 required-field">Тип оплаты</label>
+                    <select id="jobPriceType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                        <option value="">Выберите тип оплаты</option>
+                        <option value="fixed">Фиксированная</option>
+                        <option value="negotiable">Договорная</option>
+                    </select>
+                </div>
+                <div class="mb-4" id="priceInputContainer" style="display: none;">
+                    <label for="jobPrice" class="block text-gray-700 font-medium mb-2">Сумма (₽)</label>
+                    <input type="number" id="jobPrice" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary">
+                </div>
+                <div class="mb-6">
+                    <label for="jobContact" class="block text-gray-700 font-medium mb-2">Контакт (Telegram)</label>
+                    <div class="flex items-center">
+                        <span class="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500">@</span>
+                        <input type="text" id="jobContact" class="w-full px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-secondary" value="ivan_kaistudent">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelBtn" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition">
+                        Отмена
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-blue-600 transition">
+                        Опубликовать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center border-b p-4">
+                <h3 class="text-lg font-semibold text-primary">Вход в аккаунт</h3>
+                <button id="closeLoginModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="p-6">
+                <div class="mb-4">
+                    <label for="loginEmail" class="block text-gray-700 font-medium mb-2 required-field">Email</label>
+                    <input type="email" id="loginEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                </div>
+                <div class="mb-4">
+                    <label for="loginPassword" class="block text-gray-700 font-medium mb-2 required-field">Пароль</label>
+                    <input type="password" id="loginPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                </div>
+                <div class="mb-6 flex justify-between items-center">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="rememberMe" class="h-4 w-4 text-secondary focus:ring-secondary border-gray-300 rounded">
+                        <label for="rememberMe" class="ml-2 block text-sm text-gray-700">Запомнить меня</label>
+                    </div>
+                    <a href="#" class="text-sm text-secondary hover:underline">Забыли пароль?</a>
+                </div>
+                <button type="submit" class="w-full bg-secondary text-white py-2 rounded-md hover:bg-blue-600 transition">
+                    Войти
+                </button>
+            </form>
+            <div class="border-t p-4 text-center text-sm text-gray-600">
+                Нет аккаунта? <button id="goToRegister" class="text-secondary hover:underline">Зарегистрироваться</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b p-4">
+                <h3 class="text-lg font-semibold text-primary">Регистрация</h3>
+                <button id="closeRegisterModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="p-6">
+                <div class="mb-4">
+                    <label for="regName" class="block text-gray-700 font-medium mb-2 required-field">Имя</label>
+                    <input type="text" id="regName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                </div>
+                <div class="mb-4">
+                    <label for="regEmail" class="block text-gray-700 font-medium mb-2 required-field">Email</label>
+                    <input type="email" id="regEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                </div>
+                <div class="mb-4">
+                    <label for="regPassword" class="block text-gray-700 font-medium mb-2 required-field">Пароль</label>
+                    <input type="password" id="regPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                </div>
+                <div class="mb-4">
+                    <label for="regConfirmPassword" class="block text-gray-700 font-medium mb-2 required-field">Подтвердите пароль</label>
+                    <input type="password" id="regConfirmPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                </div>
+                <div class="mb-6">
+                    <label for="regTelegram" class="block text-gray-700 font-medium mb-2 required-field">Telegram</label>
+                    <div class="flex items-center">
+                        <span class="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500">@</span>
+                        <input type="text" id="regTelegram" class="w-full px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Этот контакт будет использоваться для связи с заказчиками</p>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2 required-field">Вы студент КАИ?</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="isStudent" class="h-4 w-4 text-secondary focus:ring-secondary" required="">
+                            <span class="ml-2">Да</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="isStudent" class="h-4 w-4 text-secondary focus:ring-secondary">
+                            <span class="ml-2">Нет</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <div class="flex items-start">
+                        <input type="checkbox" id="agreeTerms" class="mt-1 h-4 w-4 text-secondary focus:ring-secondary border-gray-300 rounded" required="">
+                        <label for="agreeTerms" class="ml-2 block text-sm text-gray-700">
+                            Я согласен с <a href="#" class="text-secondary hover:underline">Условиями использования</a> и <a href="#" class="text-secondary hover:underline">Политикой конфиденциальности</a>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-secondary text-white py-2 rounded-md hover:bg-blue-600 transition">
+                    Зарегистрироваться
+                </button>
+            </form>
+            <div class="border-t p-4 text-center text-sm text-gray-600">
+                Уже есть аккаунт? <button id="goToLogin" class="text-secondary hover:underline">Войти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Detail Modal -->
+    <div id="reviewDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center border-b p-4">
+                <h3 class="text-lg font-semibold text-primary">Отзыв</h3>
+                <button id="closeReviewDetail" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <img src="https://imgholder.ru/50x50/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-10 h-10 rounded-full mr-3">
+                    <div>
+                        <h4 class="font-medium">Михаил С.</h4>
+                        <div class="text-yellow-400">★★★★★</div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p id="reviewDetailText" class="text-gray-700">Отличная работа! Компьютер работает как новый, всё настроено под мои нужды. Михаил профессионал своего дела, рекомендую!</p>
+                </div>
+                <div class="text-sm text-gray-500 mb-2">
+                    <i class="fas fa-calendar-alt mr-1"></i> 10 февраля 2025
+                </div>
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-shopping-bag mr-1"></i> Заказ "Настройка компьютера"
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Modal -->
+    <div id="howItWorksModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b p-4">
+                <h3 class="text-lg font-semibold text-primary">Как это работает?</h3>
+                <button id="closeHowItWorks" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="mb-6">
+                    <div class="flex items-start mb-4">
+                        <div class="bg-primary rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">1</div>
+                        <div>
+                            <h4 class="font-semibold text-primary">Создайте объявление</h4>
+                            <p class="text-gray-700">Заполните форму, чтобы предложить свои услуги или найти исполнителя.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start mb-4">
+                        <div class="bg-primary rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">2</div>
+                        <div>
+                            <h4 class="font-semibold text-primary">Свяжитесь</h4>
+                            <p class="text-gray-700">Используйте предоставленные контакты для связи с автором объявления.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-primary rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-3 flex-shrink-0">3</div>
+                        <div>
+                            <h4 class="font-semibold text-primary">Договоритесь</h4>
+                            <p class="text-gray-700">Обсудите детали и договоритесь о выполнении работы прямо в Telegram.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-md">
+                    <h4 class="font-semibold text-primary mb-2"><i class="fas fa-exclamation-circle mr-2"></i>Важно!</h4>
+                    <p class="text-gray-700 text-sm">
+                        Платформа предназначена только для студентов колледжа КАИ. 
+                        Все договорённости совершаются между сторонами напрямую. 
+                        Будьте внимательны при выборе исполнителя и проверяйте качество работы.
+                    </p>
+                </div>
+                <div class="mt-6 flex justify-center">
+                    <button id="closeHowItWorksBtn" class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-blue-600 transition">
+                        Понятно, спасибо!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b p-4">
+                <h3 class="text-lg font-semibold text-primary">Оформление заказа</h3>
+                <button id="closeOrderModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="p-6">
+                <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-primary mb-2">Разработка простого сайта</h4>
+                    <p class="text-gray-700 mb-2">Создам одностраничный сайт для вашего проекта или портфолио на HTML/CSS/JS.</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="font-medium">2 000 - 5 000 ₽</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm mr-1">Исполнитель:</span>
+                            <img src="https://imgholder.ru/20x20/8493a8/ffffff&amp;text=AVATAR&amp;font=kelson" alt="Аватар" class="w-5 h-5 rounded-full mr-1">
+                            <span class="text-sm font-medium">Алексей В.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="orderDetails" class="block text-gray-700 font-medium mb-2 required-field">Детали заказа</label>
+                    <textarea id="orderDetails" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" placeholder="Опишите, что именно вам нужно сделать..." required=""></textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="orderPrice" class="block text-gray-700 font-medium mb-2 required-field">Сумма (₽)</label>
+                    <input type="number" id="orderPrice" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" value="3000" required="">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="orderDeadline" class="block text-gray-700 font-medium mb-2 required-field">Срок выполнения</label>
+                    <input type="date" id="orderDeadline" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary" required="">
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex items-start">
+                        <input type="checkbox" id="agreeTermsOrder" class="mt-1 h-4 w-4 text-secondary focus:ring-secondary border-gray-300 rounded" required="">
+                        <label for="agreeTermsOrder" class="ml-2 block text-sm text-gray-700">
+                            Я согласен с условиями и принимаю, что все договорённости совершаются между мной и исполнителем напрямую.
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-secondary text-white py-2 rounded-md hover:bg-blue-600 transition">
+                    <i class="fas fa-shopping-cart mr-1"></i> Оформить заказ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-white py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-briefcase text-xl text-secondary"></i>
+                        <h2 class="text-lg font-bold">КАИ Подработки</h2>
+                    </div>
+                    <p class="text-sm text-gray-300 mt-2">Платформа для студентов колледжа КАИ</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="hover:text-secondary transition">О платформе</a>
+                    <a href="#" class="hover:text-secondary transition">Правила</a>
+                    <a href="#" class="hover:text-secondary transition">Контакты</a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-sm text-gray-300">
+                <p>© 2025 Доска подработок для студентов колледжа КАИ. Powered by <a href="https://t.me/danya_strvrv" target="_blank" class="text-secondary hover:underline">@danya_strvrv</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Auth state (simulated)
+        let isLoggedIn = false;
+        
+        // Modal functionality
+        const addBtn = document.getElementById('addBtn');
+        const addJobModal = document.getElementById('addJobModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const jobForm = document.getElementById('jobForm');
+        const howItWorksBtn = document.getElementById('howItWorksBtn');
+        const howItWorksModal = document.getElementById('howItWorksModal');
+        const closeHowItWorks = document.getElementById('closeHowItWorks');
+        const closeHowItWorksBtn = document.getElementById('closeHowItWorksBtn');
+        const jobPriceType = document.getElementById('jobPriceType');
+        const priceInputContainer = document.getElementById('priceInputContainer');
+        
+        // Auth elements
+        const authButtons = document.getElementById('authButtons');
+        const userProfile = document.getElementById('userProfile');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const profileLink = document.getElementById('profileLink');
+        const ordersLink = document.getElementById('ordersLink');
+        const reviewsLink = document.getElementById('reviewsLink');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        // Modals
+        const loginModal = document.getElementById('loginModal');
+        const registerModal = document.getElementById('registerModal');
+        const orderModal = document.getElementById('orderModal');
+        const reviewDetailModal = document.getElementById('reviewDetailModal');
+        const closeLoginModal = document.getElementById('closeLoginModal');
+        const closeRegisterModal = document.getElementById('closeRegisterModal');
+        const closeOrderModal = document.getElementById('closeOrderModal');
+        const closeReviewDetail = document.getElementById('closeReviewDetail');
+        const goToRegister = document.getElementById('goToRegister');
+        const goToLogin = document.getElementById('goToLogin');
+        
+        // Sections
+        const mainContent = document.getElementById('mainContent');
+        const profileSection = document.getElementById('profileSection');
+        const ordersSection = document.getElementById('ordersSection');
+        const reviewsSection = document.getElementById('reviewsSection');
+        
+        // Close all modals
+        const closeModals = () => {
+            addJobModal.classList.add('hidden');
+            howItWorksModal.classList.add('hidden');
+            loginModal.classList.add('hidden');
+            registerModal.classList.add('hidden');
+            orderModal.classList.add('hidden');
+            reviewDetailModal.classList.add('hidden');
+        };
+        
+        // Reset content view
+        const resetContentView = () => {
+            mainContent.classList.remove('hidden');
+            profileSection.classList.add('hidden');
+            ordersSection.classList.add('hidden');
+            reviewsSection.classList.add('hidden');
+        };
+        
+        // Update auth state UI
+        const updateAuthUI = () => {
+            if (isLoggedIn) {
+                authButtons.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+            } else {
+                authButtons.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+                resetContentView();
+            }
+        };
+        
+        // Show add job modal
+        addBtn.addEventListener('click', () => {
+            if (!isLoggedIn) {
+                loginModal.classList.remove('hidden');
+            } else {
+                addJobModal.classList.remove('hidden');
+            }
+        });
+        
+        // Other modals
+        closeModal.addEventListener('click', closeModals);
+        cancelBtn.addEventListener('click', closeModals);
+        closeHowItWorks.addEventListener('click', closeModals);
+        closeHowItWorksBtn.addEventListener('click', closeModals);
+        closeLoginModal.addEventListener('click', closeModals);
+        closeRegisterModal.addEventListener('click', closeModals);
+        closeOrderModal.addEventListener('click', closeModals);
+        closeReviewDetail.addEventListener('click', closeModals);
+        
+        // Show how it works modal
+        howItWorksBtn.addEventListener('click', () => {
+            howItWorksModal.classList.remove('hidden');
+        });
+        
+        // Auth buttons
+        loginBtn.addEventListener('click', () => {
+            loginModal.classList.remove('hidden');
+        });
+        
+        registerBtn.addEventListener('click', () => {
+            registerModal.classList.remove('hidden');
+        });
+        
+        goToRegister.addEventListener('click', () => {
+            loginModal.classList.add('hidden');
+            registerModal.classList.remove('hidden');
+        });
+        
+        goToLogin.addEventListener('click', () => {
+            registerModal.classList.add('hidden');
+            loginModal.classList.remove('hidden');
+        });
+        
+        // Login simulation
+        document.querySelector('#loginModal form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            isLoggedIn = true;
+            closeModals();
+            updateAuthUI();
+        });
+        
+        // Register simulation
+        document.querySelector('#registerModal form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const userName = document.getElementById('regName').value;
+
+            document.getElementById('usernameDisplay').textContent = userName;
+
+            isLoggedIn = true;
+            closeModals();
+            updateAuthUI();
+        });
+        
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            isLoggedIn = false;
+            updateAuthUI();
+        });
+        
+        // Profile navigation
+        profileLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetContentView();
+            profileSection.classList.remove('hidden');
+            mainContent.classList.add('hidden');
+        });
+        
+        ordersLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetContentView();
+            ordersSection.classList.remove('hidden');
+            mainContent.classList.add('hidden');
+        });
+        
+        reviewsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetContentView();
+            reviewsSection.classList.remove('hidden');
+            mainContent.classList.add('hidden');
+        });
+        
+        // Toggle price input based on payment type
+        jobPriceType.addEventListener('change', (e) => {
+            if (e.target.value === 'fixed') {
+                priceInputContainer.style.display = 'block';
+                document.getElementById('jobPrice').setAttribute('required', 'required');
+            } else {
+                priceInputContainer.style.display = 'none';
+                document.getElementById('jobPrice').removeAttribute('required');
+            }
+        });
+        
+        // Form submission
+        jobForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Form validation
+            const title = document.getElementById('jobTitle').value;
+            const category = document.getElementById('jobCategory').value;
+            const description = document.getElementById('jobDescription').value;
+            const priceType = document.getElementById('jobPriceType').value;
+            const contact = document.getElementById('jobContact').value;
+            
+            if (!title || !category || !description || !priceType || !contact) {
+                alert('Пожалуйста, заполните все обязательные поля!');
+                return;
+            }
+            
+            if (priceType === 'fixed' && !document.getElementById('jobPrice').value) {
+                alert('Пожалуйста, укажите сумму оплаты!');
+                return;
+            }
+            
+            // Here would be the code to save the job to database
+            alert('Ваше объявление опубликовано!');
+            jobForm.reset();
+            closeModals();
+        });
+        
+        // Order buttons
+        document.querySelectorAll('.grid button').forEach(button => {
+            if (button.textContent.includes('Заказать')) {
+                button.addEventListener('click', () => {
+                    if (!isLoggedIn) {
+                        loginModal.classList.remove('hidden');
+                    } else {
+                        orderModal.classList.remove('hidden');
+                    }
+                });
+            }
+        });
+        
+        // Order form submission
+        document.querySelector('#orderModal form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Заказ оформлен! Исполнитель свяжется с вами в ближайшее время.');
+            closeModals();
+        });
+        
+        // Tab switching in orders section
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                // Remove active class from all tabs
+                document.querySelectorAll('.nav-item').forEach(navItem => {
+                    navItem.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                item.classList.add('active');
+                
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Show the corresponding tab content
+                const tabId = item.getAttribute('data-tab');
+                document.getElementById(tabId).classList.remove('hidden');
+            });
+        });
+        
+        // Show review detail
+        window.showReviewDetail = (reviewText) => {
+            document.getElementById('reviewDetailText').textContent = reviewText;
+            reviewDetailModal.classList.remove('hidden');
+        };
+        
+        // Search functionality
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const jobCards = document.querySelectorAll('.grid > div');
+            
+            jobCards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const description = card.querySelector('p').textContent.toLowerCase();
+                const category = card.querySelector('span:first-child').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm) || category.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Initialize RateYo for rating display
+        $(".rateyo").rateYo({
+            rating: 4.2,
+            starWidth: "20px",
+            readOnly: true,
+            ratedFill: "#f39c12"
+        });
+    </script>
+
+</body></html>
