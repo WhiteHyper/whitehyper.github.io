@@ -1,0 +1,37 @@
+<style>
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .required-field::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        .star-rating {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            font-size: 1.5em;
+            justify-content: space-around;
+            padding: 0;
+            text-align: center;
+            width: 5em;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            color: #ccc;
+            cursor: pointer;
+        }
+        .star-rating :checked ~ label {
+            color: #f90;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #fc0;
+        }
+        .nav-item.active {
+            border-bottom: 3px solid #3498db;
+            color: #3498db;
+        }
+    </style>
